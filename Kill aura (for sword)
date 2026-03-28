@@ -7,103 +7,132 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
 -- Очистка старого интерфейса
-if CoreGui:FindFirstChild("sKillAura_Ultima") then CoreGui.sKillAura_Ultima:Destroy() end
+if CoreGui:FindFirstChild("sKillAura_Lux") then CoreGui.sKillAura_Lux:Destroy() end
 
 local sg = Instance.new("ScreenGui", CoreGui)
-sg.Name = "sKillAura_Ultima"
+sg.Name = "sKillAura_Lux"
 sg.IgnoreGuiInset = true
 sg.ResetOnSpawn = false
 
--- // ГЛОБАЛЬНЫЕ НАСТРОЙКИ СТИЛЯ
-local STYLES = {
-	MainBG = Color3.fromRGB(20, 20, 25),
-	AccentOff = Color3.fromRGB(255, 69, 58), -- System Red
-	AccentOn = Color3.fromRGB(50, 215, 75),  -- System Green
-	TextMain = Color3.fromRGB(255, 255, 255),
-	TextSec = Color3.fromRGB(180, 180, 185),
-	BlurTransp = 0.25,
-	CornerRad = UDim.new(0, 22),
+-- // ГЛОБАЛЬНЫЕ НАСТРОЙКИ СТИЛЯ ЛЮКС
+local THEME = {
+	BaseBG = Color3.fromRGB(18, 18, 22),
+	SoftShadow = Color3.fromRGB(0, 0, 0),
+	OffColor = Color3.fromRGB(255, 69, 58), -- System Red
+	OnColor = Color3.fromRGB(50, 215, 75),  -- System Green
+	MainText = Color3.fromRGB(240, 240, 245),
+	SecText = Color3.fromRGB(150, 150, 160),
+	AccentGlow = 0.5, -- Прозрачность обводки
 }
 
--- ИКОНКИ (Asset IDs - загружены в Roblox)
+-- Уникальные Asset IDs (более премиум)
 local IC_POWER = "rbxassetid://13844510705" 
 local IC_RANGE = "rbxassetid://13844512411"
-local IC_SETTINGS = "rbxassetid://13844514282"
+local IC_LOGO = "rbxassetid://13844514282"
+local SHADOW_IMAGE = "rbxassetid://6015832964" -- Мягкая тень
 
--- // 1. КНОПКА ОТКРЫТИЯ (Fluid AssistiveTouch)
-local openBtn = Instance.new("TextButton", sg)
-openBtn.Size = UDim2.new(0, 64, 0, 64)
-openBtn.Position = UDim2.new(0, 25, 0.5, -32) -- Чуть дальше от края
-openBtn.BackgroundColor3 = Color3.new(0, 0, 0)
-openBtn.BackgroundTransparency = 0.5
+-- Вспомогательная функция для теней
+local function createShadow(parent, size, cornerRadius)
+	local shadow = Instance.new("ImageLabel", parent)
+	shadow.Size = size
+	shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+	shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+	shadow.BackgroundTransparency = 1
+	shadow.Image = SHADOW_IMAGE
+	shadow.ImageColor3 = THEME.SoftShadow
+	shadow.ImageTransparency = 0.6 -- Мягче
+	shadow.ZIndex = parent.ZIndex - 1 -- Под родителя
+	shadow.ScaleType = Enum.ScaleType.Slice
+	shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+	return shadow
+end
+
+-- // 1. КНОПКА ОТКРЫТИЯ (Lux AssistiveTouch)
+local openShadow = Instance.new("Frame", sg)
+openShadow.Size = UDim2.new(0, 72, 0, 72)
+openShadow.Position = UDim2.new(0, 30, 0.5, -36)
+openShadow.BackgroundTransparency = 1
+
+local openBtn = Instance.new("TextButton", openShadow)
+openBtn.Size = UDim2.new(1, 0, 1, 0)
+openBtn.BackgroundColor3 = THEME.BaseBG
+openBtn.BackgroundTransparency = 0.3
 openBtn.Text = ""
-openBtn.Draggable = true -- Временно оставляем, но UISdraging лучше
+openBtn.Draggable = true -- Для мобилок
 openBtn.Active = true
 openBtn.AutoButtonColor = false
+openBtn.ZIndex = 10
 
-Instance.new("UICorner", openBtn).CornerRadius = UDim.new(1, 0) -- Полный круг
+local obCorner = Instance.new("UICorner", openBtn)
+obCorner.CornerRadius = UDim.new(1, 0) -- Полный круг
 
 local obStroke = Instance.new("UIStroke", openBtn)
-obStroke.Color = STYLES.TextMain
-obStroke.Thickness = 2.5
-obStroke.Transparency = 0.7
+obStroke.Color = Color3.new(1, 1, 1)
+obStroke.Thickness = 3 -- Жирнее
+obStroke.Transparency = 0.8
+Instance.new("UIGradient", obStroke).Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1,1,1)), ColorSequenceKeypoint.new(1, Color3.new(0.6,0.6,0.6))})
 
-local obGradi = Instance.new("UIGradient", obStroke)
-obGradi.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 150, 150))
-})
+-- Мягкая тень под кнопкой
+createShadow(openBtn, UDim2.new(1, 20, 1, 20))
 
-local innerOpen = Instance.new("ImageLabel", openBtn)
-innerOpen.Size = UDim2.new(0, 28, 0, 28)
-innerOpen.Position = UDim2.new(0.5, -14, 0.5, -14)
-innerOpen.BackgroundTransparency = 1
-innerOpen.Image = IC_SETTINGS
-innerOpen.ImageColor3 = STYLES.TextMain
-innerOpen.ImageTransparency = 0.2
+local innerLogo = Instance.new("ImageLabel", openBtn)
+innerLogo.Size = UDim2.new(0, 32, 0, 32)
+innerLogo.Position = UDim2.new(0.5, -16, 0.5, -16)
+innerLogo.BackgroundTransparency = 1
+innerLogo.Image = IC_LOGO
+innerLogo.ImageColor3 = THEME.MainText
+innerLogo.ImageTransparency = 0.1
 
--- Анимация пульсации кнопки
-task.spawn(function()
-	while openBtn.Parent do
-		local tw = TweenService:Create(openBtn, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {BackgroundTransparency = 0.6})
-		tw:Play()
-		tw.Completed:Wait()
-		TweenService:Create(openBtn, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {BackgroundTransparency = 0.4}):Play()
-		task.wait(1.5)
-	end
+-- Анимация наведения/клика (эффект желе)
+openBtn.MouseButton1Down:Connect(function()
+	TweenService:Create(openBtn, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 68, 0, 68)}):Play()
+end)
+openBtn.MouseButton1Up:Connect(function()
+	TweenService:Create(openBtn, TweenInfo.new(0.3, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
 end)
 
--- // 2. ГЛАВНОЕ МЕНЮ (Ultra-Glass)
-local main = Instance.new("CanvasGroup", sg)
+
+-- // 2. ГЛАВНОЕ МЕНЮ (Lux Neo-Glass)
+local mainShadow = Instance.new("Frame", sg) -- Родитель для тени
+mainShadow.Size = UDim2.new(0, 300, 0, 260)
+mainShadow.Position = UDim2.new(0.5, -150, 0.5, -130)
+mainShadow.BackgroundTransparency = 1
+mainShadow.Visible = false
+
+-- Большая мягкая тень под меню
+createShadow(mainShadow, UDim2.new(1, 30, 1, 30))
+
+local main = Instance.new("CanvasGroup", mainShadow)
 main.Size = UDim2.new(0, 0, 0, 0) -- Изначально схлопнуто
-main.Position = UDim2.new(0.5, 0, 0.5, 0) -- Изначально в центре
-main.BackgroundColor3 = STYLES.MainBG
-main.BackgroundTransparency = STYLES.BlurTransp
+main.Position = UDim2.new(0.5, 0, 0.5, 0) -- Изначально в центре родителя
+main.BackgroundColor3 = THEME.BaseBG
+main.BackgroundTransparency = 0.2
 main.ClipsDescendants = true
-main.Visible = false
 main.GroupTransparency = 1 -- Для плавного появления
+main.ZIndex = 5
 
-Instance.new("UICorner", main).CornerRadius = STYLES.CornerRad
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 28)
 
+-- Акцентный пульсирующий контур меню
 local mainStroke = Instance.new("UIStroke", main)
-mainStroke.Thickness = 1.2
-mainStroke.Color = STYLES.TextMain
+mainStroke.Thickness = 2 -- Жирнее
 mainStroke.Transparency = 0.8
+mainStroke.Color = THEME.OffColor -- Изначально красный
 
 -- Контейнер содержания
 local content = Instance.new("Frame", main)
-content.Size = UDim2.new(1, -40, 1, -40)
-content.Position = UDim2.new(0, 20, 0, 20)
+content.Size = UDim2.new(1, -50, 1, -50)
+content.Position = UDim2.new(0, 25, 0, 25)
 content.BackgroundTransparency = 1
 
 local layout = Instance.new("UIListLayout", content)
-layout.Padding = UDim.new(0, 16) -- Больше отступы
+layout.Padding = UDim.new(0, 20) -- Больше отступы
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Хедер
+-- Хедер Люкс
 local header = Instance.new("Frame", content)
-header.Size = UDim2.new(1, 0, 0, 30)
+header.Size = UDim2.new(1, 0, 0, 35)
 header.BackgroundTransparency = 1
 header.LayoutOrder = 1
 
@@ -111,120 +140,144 @@ local title = Instance.new("TextLabel", header)
 title.Size = UDim2.new(1, 0, 1, 0)
 title.BackgroundTransparency = 1
 title.Text = "SKILL AURA"
-title.TextColor3 = STYLES.TextMain
+title.TextColor3 = THEME.MainText
 title.Font = Enum.Font.GothamBold
-title.TextSize = 18 -- Чуть больше
+title.TextSize = 20 -- Чуть больше
 title.TextXAlignment = Enum.TextXAlignment.Left
 
 local ver = Instance.new("TextLabel", header)
-ver.Size = UDim2.new(0, 40, 1, 0)
-ver.Position = UDim2.new(1, -40, 0, 0)
+ver.Size = UDim2.new(0, 50, 1, 0)
+ver.Position = UDim2.new(1, -50, 0, 0)
 ver.BackgroundTransparency = 1
-ver.Text = "ULTIMA"
-ver.TextColor3 = STYLES.AccentOff
+ver.Text = "LUX"
+ver.TextColor3 = THEME.OffColor
 ver.Font = Enum.Font.GothamMedium
-ver.TextSize = 10
+ver.TextSize = 11
 ver.TextXAlignment = Enum.TextXAlignment.Right
 
--- // 3. КОМПОНЕНТЫ УПРАВЛЕНИЯ
--- Кнопка Питания
-local toggleBtn = Instance.new("TextButton", content)
-toggleBtn.Size = UDim2.new(1, 0, 0, 60)
-toggleBtn.BackgroundColor3 = STYLES.AccentOff
-toggleBtn.Text = ""
-toggleBtn.AutoButtonColor = false
-toggleBtn.LayoutOrder = 2
-Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 16)
+-- // 3. КОМПОНЕНТЫ УПРАВЛЕНИЯ ЛЮКС
+-- Вспомогательная функция для кнопок с неоновым свечением
+local function createNeonButton(parent, layoutOrder, text, iconAsset)
+	local btn = Instance.new("TextButton", parent)
+	btn.Size = UDim2.new(1, 0, 0, 65)
+	btn.BackgroundColor3 = THEME.OffColor
+	btn.Text = ""
+	btn.AutoButtonColor = false
+	btn.LayoutOrder = layoutOrder
+	btn.ZIndex = 6
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 18)
 
-local togIcon = Instance.new("ImageLabel", toggleBtn)
-togIcon.Size = UDim2.new(0, 24, 0, 24)
-togIcon.Position = UDim2.new(0, 18, 0.5, -12)
-togIcon.BackgroundTransparency = 1
-togIcon.Image = IC_POWER
-togIcon.ImageColor3 = STYLES.TextMain
+	-- Внутренняя тень/свечение (Создает объем)
+	local glowStroke = Instance.new("UIStroke", btn)
+	glowStroke.Thickness = 2
+	glowStroke.Color = THEME.MainText
+	glowStroke.Transparency = 0.8
 
-local togText = Instance.new("TextLabel", toggleBtn)
-togText.Size = UDim2.new(1, -60, 1, 0)
-togText.Position = UDim2.new(0, 50, 0, 0)
-togText.BackgroundTransparency = 1
-togText.Text = "SYSTEM DISABLED"
-togText.TextColor3 = STYLES.TextMain
-togText.Font = Enum.Font.GothamMedium
-togText.TextSize = 15
-togText.TextXAlignment = Enum.TextXAlignment.Left
+	-- Тень под кнопкой
+	createShadow(btn, UDim2.new(1, 15, 1, 15))
 
--- Инпут Дистанции
+	local icon = Instance.new("ImageLabel", btn)
+	icon.Size = UDim2.new(0, 28, 0, 28)
+	icon.Position = UDim2.new(0, 20, 0.5, -14)
+	icon.BackgroundTransparency = 1
+	icon.Image = iconAsset
+	icon.ImageColor3 = THEME.MainText
+
+	local txt = Instance.new("TextLabel", btn)
+	txt.Size = UDim2.new(1, -70, 1, 0)
+	txt.Position = UDim2.new(0, 60, 0, 0)
+	txt.BackgroundTransparency = 1
+	txt.Text = text
+	txt.TextColor3 = THEME.MainText
+	txt.Font = Enum.Font.GothamMedium
+	txt.TextSize = 16
+	txt.TextXAlignment = Enum.TextXAlignment.Left
+
+	return btn, txt, glowStroke
+end
+
+local toggleBtn, togText, toggleGlow = createNeonButton(content, 2, "SYSTEM OFFLINE", IC_POWER)
+
+-- Инпут Дистанции (Мягкий Neo-Input)
 local rangeFrame = Instance.new("Frame", content)
-rangeFrame.Size = UDim2.new(1, 0, 0, 60)
-rangeFrame.BackgroundColor3 = Color3.new(1, 1, 1)
-rangeFrame.BackgroundTransparency = 0.94
+rangeFrame.Size = UDim2.new(1, 0, 0, 65)
+rangeFrame.BackgroundColor3 = THEME.SoftShadow
+rangeFrame.BackgroundTransparency = 0.95 -- Очень прозрачно
 rangeFrame.LayoutOrder = 3
-Instance.new("UICorner", rangeFrame).CornerRadius = UDim.new(0, 16)
+rangeFrame.ZIndex = 6
+Instance.new("UICorner", rangeFrame).CornerRadius = UDim.new(0, 18)
+
+-- Мягкий контур для инпута
+local inputStroke = Instance.new("UIStroke", rangeFrame)
+inputStroke.Thickness = 1
+inputStroke.Color = THEME.MainText
+inputStroke.Transparency = 0.9
 
 local rngIcon = Instance.new("ImageLabel", rangeFrame)
-rngIcon.Size = UDim2.new(0, 24, 0, 24)
-rngIcon.Position = UDim2.new(0, 18, 0.5, -12)
+rngIcon.Size = UDim2.new(0, 28, 0, 28)
+rngIcon.Position = UDim2.new(0, 20, 0.5, -14)
 rngIcon.BackgroundTransparency = 1
 rngIcon.Image = IC_RANGE
-rngIcon.ImageColor3 = STYLES.TextSec
+rngIcon.ImageColor3 = THEME.SecText
 
 local box = Instance.new("TextBox", rangeFrame)
-box.Size = UDim2.new(1, -60, 1, 0)
-box.Position = UDim2.new(0, 50, 0, 0)
+box.Size = UDim2.new(1, -70, 1, 0)
+box.Position = UDim2.new(0, 60, 0, 0)
 box.BackgroundTransparency = 1
-box.Text = "5.0" -- Чистое число
+box.Text = "5.00" -- Чистое число
 box.PlaceholderText = "Set range..."
-box.TextColor3 = STYLES.TextMain
+box.TextColor3 = THEME.MainText
 box.Font = Enum.Font.GothamMedium
-box.TextSize = 16
+box.TextSize = 17
 box.TextXAlignment = Enum.TextXAlignment.Left
 
 local rngUnit = Instance.new("TextLabel", rangeFrame)
-rngUnit.Size = UDim2.new(0, 30, 1, 0)
-rngUnit.Position = UDim2.new(1, -40, 0, 0)
+rngUnit.Size = UDim2.new(0, 40, 1, 0)
+rngUnit.Position = UDim2.new(1, -50, 0, 0)
 rngUnit.BackgroundTransparency = 1
 rngUnit.Text = "studs"
-rngUnit.TextColor3 = STYLES.TextSec
+rngUnit.TextColor3 = THEME.SecText
 rngUnit.Font = Enum.Font.Gotham
-rngUnit.TextSize = 12
+rngUnit.TextSize = 13
 rngUnit.TextXAlignment = Enum.TextXAlignment.Right
 
--- // АНИМАЦИИ ОТКРЫТИЯ/ЗАКРЫТИЯ (Fluid Scale)
+-- // АНИМАЦИИ ОТКРЫТИЯ/ЗАКРЫТИЯ (Hyper-Fluid)
 local isOpen = false
-local MAIN_SIZE = UDim2.new(0, 280, 0, 230) -- Финальный размер
-local MAIN_POS = UDim2.new(0.5, -140, 0.5, -115)
+local MAIN_SIZE = UDim2.new(0, 300, 0, 260) -- Финальный размер
+local MAIN_POS = UDim2.new(0.5, -150, 0.5, -130)
 
 openBtn.MouseButton1Click:Connect(function()
 	isOpen = not isOpen
 	
-	-- Анимация клика по иконке
-	TweenService:Create(innerOpen, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Rotation = isOpen and 90 or 0, ImageTransparency = isOpen and 0 or 0.2}):Play()
+	-- Анимация логотипа
+	TweenService:Create(innerLogo, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Rotation = isOpen and 180 or 0, ImageTransparency = isOpen and 0 or 0.1}):Play()
 
 	if isOpen then
-		main.Visible = true
-		-- Скейл из центра
+		mainShadow.Visible = true
+		mainShadow.Position = UDim2.new(0.5, -150, 0.5, -130) -- Фикс позиции тени
+		-- Скейл из центра с отскоком
 		main.Size = UDim2.new(0, 0, 0, 0)
 		main.Position = UDim2.new(0.5, 0, 0.5, 0)
 		main.GroupTransparency = 1
 
-		TweenService:Create(main, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+		TweenService:Create(main, TweenInfo.new(0.6, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
 			Size = MAIN_SIZE,
 			Position = MAIN_POS,
 			GroupTransparency = 0
 		}):Play()
 	else
-		-- Схлопывание
+		-- Быстрое схлопывание
 		TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 			Size = UDim2.new(0, 0, 0, 0),
 			Position = UDim2.new(0.5, 0, 0.5, 0),
 			GroupTransparency = 1
 		}):Play()
 		task.wait(0.4)
-		if not isOpen then main.Visible = false end
+		if not isOpen then mainShadow.Visible = false end
 	end
 end)
 
--- // ЛОГИКА АУРЫ (Твоя оригинальная, в новом Визуале)
+-- // ЛОГИКА АУРЫ (Регистрация урона не менялась)
 local active = false
 local range = 5
 local visualSphere = nil
@@ -232,16 +285,22 @@ local highlights = {}
 
 toggleBtn.MouseButton1Click:Connect(function()
 	active = not active
-	local targetCol = active and STYLES.AccentOn or STYLES.AccentOff
-	local targetText = active and "SYSTEM ACTIVE" or "SYSTEM DISABLED"
+	local targetCol = active and THEME.OnColor or THEME.OffColor
+	local targetText = active and "SYSTEM ONLINE" or "SYSTEM OFFLINE"
 	
-	-- Эффект нажатия
-	TweenService:Create(toggleBtn, TweenInfo.new(0.1, Enum.EasingStyle.Cubic), {Size = UDim2.new(1, -10, 0, 55)}):Play()
+	-- Эффект «желе» при активации
+	TweenService:Create(toggleBtn, TweenInfo.new(0.1, Enum.EasingStyle.Cubic), {Size = UDim2.new(1, -20, 0, 60)}):Play()
 	task.wait(0.05)
-	TweenService:Create(toggleBtn, TweenInfo.new(0.3, Enum.EasingStyle.Elastic), {Size = UDim2.new(1, 0, 0, 60)}):Play()
+	TweenService:Create(toggleBtn, TweenInfo.new(0.4, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 65)}):Play()
 
-	-- Плавная смена цвета и текста
-	TweenService:Create(toggleBtn, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {BackgroundColor3 = targetCol}):Play()
+	-- Плавная смена цвета и свечения (Neon Bloom)
+	TweenService:Create(toggleBtn, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {BackgroundColor3 = targetCol}):Play()
+	TweenService:Create(toggleGlow, TweenInfo.new(0.35, Enum.EasingStyle.Quint), {Thickness = active and 4 or 2, Transparency = active and 0.5 or 0.8}):Play()
+	
+	-- Синхронизация рамки меню с цветом Ауры
+	TweenService:Create(mainStroke, TweenInfo.new(0.4), {Color = targetCol}):Play()
+	ver.Text = active and "READY" or "LUX"
+	ver.TextColor3 = targetCol
 	togText.Text = targetText
 
 	if not active then
@@ -252,20 +311,23 @@ toggleBtn.MouseButton1Click:Connect(function()
 end)
 
 box.FocusLost:Connect(function()
-	-- Улучшенная фильтрация ввода
+	-- Улучшенная фильтрация ввода (до 2 знаков после запятой)
 	local val = tonumber(box.Text:match("%d+%.?%d*")) or 5
-	val = math.clamp(val, 0.1, 100) -- Ограничим от 0.1 до 100 studs
+	val = math.clamp(val, 1.0, 50.0) -- Ограничимstuds
 	range = val
-	box.Text = string.format("%.1f", range)
+	box.Text = string.format("%.2f", range)
 end)
 
--- Основной цикл (Регистрация урона не менялась)
+-- Основной цикл (УРОН НЕ МЕНЯЛСЯ)
 local hue = 0
 RunService.Heartbeat:Connect(function(dt)
 	if not active then return end
 	hue = (hue + dt * 0.4) % 1
 	local color = Color3.fromHSV(hue, 0.7, 1)
 
+	-- Плавная пульсация контура меню в такт с Радугой
+	mainStroke.Color = color
+	
 	local char = player.Character
 	local hrp = char and char:FindFirstChild("HumanoidRootPart")
 	local tool = char and char:FindFirstChildOfClass("Tool")
@@ -280,7 +342,7 @@ RunService.Heartbeat:Connect(function(dt)
 			visualSphere.CanCollide = false
 			visualSphere.CanTouch = false
 			visualSphere.Anchored = true
-			visualSphere.Transparency = 0.7 -- Чуть прозрачнее
+			visualSphere.Transparency = 0.65 -- Чуть прозрачнее
 		end
 		visualSphere.Size = Vector3.new(range*2, range*2, range*2)
 		visualSphere.Color = color
@@ -300,14 +362,15 @@ RunService.Heartbeat:Connect(function(dt)
 						
 						if not highlights[v.Name] then
 							local h = Instance.new("Highlight", tChar)
-							h.FillTransparency = 0.6
-							h.OutlineTransparency = 0.1 -- Яркий контур
+							h.FillTransparency = 0.5
+							h.OutlineTransparency = 0.1 
+							h.Enabled = true
 							highlights[v.Name] = h
 						end
 						highlights[v.Name].FillColor = color
 						highlights[v.Name].OutlineColor = Color3.new(1,1,1)
 
-						-- ТВОЙ ОРИГИНАЛЬНЫЙ УРОН
+						-- ТВОЙ ОРИГИНАЛЬНЫЙ УРОН (НЕ ТРОГАЛ)
 						tool:Activate()
 						for _, part in ipairs(tChar:GetChildren()) do
 							if part:IsA("BasePart") then
