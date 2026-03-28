@@ -6,45 +6,22 @@ local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 
--- Очистка
-if CoreGui:FindFirstChild("sKillAura_Elite") then CoreGui.sKillAura_Elite:Destroy() end
+if CoreGui:FindFirstChild("sKillAura_Frozen") then CoreGui.sKillAura_Frozen:Destroy() end
 
 local sg = Instance.new("ScreenGui", CoreGui)
-sg.Name = "sKillAura_Elite"
+sg.Name = "sKillAura_Frozen"
 sg.IgnoreGuiInset = true
 
--- // НАСТРОЙКИ
-local active = false
-local range = 5
-local globalHue = 0
+-- // ПАЛИТРА (Светлый минимализм)
+local STYLE = {
+    GlassColor = Color3.fromRGB(255, 255, 255),
+    MainText = Color3.fromRGB(40, 40, 45),
+    AccentOn = Color3.fromRGB(0, 122, 255), -- iOS Blue
+    AccentOff = Color3.fromRGB(142, 142, 147), -- iOS Gray
+    Stroke = Color3.fromRGB(255, 255, 255),
+}
 
--- // ФУНКЦИЯ УВЕДОМЛЕНИЙ (Dynamic Island)
-local function notify(text, color)
-    local notif = Instance.new("Frame", sg)
-    notif.Size = UDim2.new(0, 200, 0, 40)
-    notif.Position = UDim2.new(0.5, -100, 0, -50)
-    notif.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    notif.BackgroundTransparency = 0.2
-    Instance.new("UICorner", notif).CornerRadius = UDim.new(1, 0)
-    Instance.new("UIStroke", notif).Color = color
-    
-    local lab = Instance.new("TextLabel", notif)
-    lab.Size = UDim2.new(1, 0, 1, 0)
-    lab.BackgroundTransparency = 1
-    lab.Text = text
-    lab.TextColor3 = Color3.new(1,1,1)
-    lab.Font = Enum.Font.GothamMedium
-    lab.TextSize = 14
-    
-    notif:TweenPosition(UDim2.new(0.5, -100, 0, 50), "Out", "Back", 0.5)
-    task.delay(2, function()
-        notif:TweenPosition(UDim2.new(0.5, -100, 0, -50), "In", "Sine", 0.5)
-        task.wait(0.5)
-        notif:Destroy()
-    end)
-end
-
--- // ПЛАВНОЕ ПЕРЕТАСКИВАНИЕ (Custom Drag)
+-- // Вспомогательная функция перетаскивания
 local function makeDraggable(frame)
     local dragging, dragInput, dragStart, startPos
     frame.InputBegan:Connect(function(input)
@@ -54,165 +31,131 @@ local function makeDraggable(frame)
             startPos = frame.Position
         end
     end)
-    frame.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
     UserInputService.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
             frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
+    frame.InputEnded:Connect(function(input)
+        dragging = false
+    end)
 end
 
--- // КНОПКА ОТКРЫТИЯ (AssistiveTouch Elite)
+-- // КНОПКА ОТКРЫТИЯ (Frosted Assistive)
 local openBtn = Instance.new("TextButton", sg)
-openBtn.Size = UDim2.new(0, 60, 0, 60)
-openBtn.Position = UDim2.new(0, 20, 0.5, -30)
-openBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
-openBtn.BackgroundTransparency = 0.5
-openBtn.Text = ""
+openBtn.Size = UDim2.new(0, 55, 0, 55)
+openBtn.Position = UDim2.new(0, 25, 0.5, -27)
+openBtn.BackgroundColor3 = STYLE.GlassColor
+openBtn.BackgroundTransparency = 0.3
+openBtn.Text = "S"
+openBtn.Font = Enum.Font.GothamBold
+openBtn.TextColor3 = STYLE.MainText
+openBtn.TextSize = 18
 Instance.new("UICorner", openBtn).CornerRadius = UDim.new(1, 0)
 local obStroke = Instance.new("UIStroke", openBtn)
+obStroke.Color = STYLE.Stroke
 obStroke.Thickness = 2
 makeDraggable(openBtn)
 
-local innerGlow = Instance.new("Frame", openBtn)
-innerGlow.Size = UDim2.new(0, 30, 0, 30)
-innerGlow.Position = UDim2.new(0.5, -15, 0.5, -15)
-innerGlow.BackgroundColor3 = Color3.new(1,1,1)
-innerGlow.BackgroundTransparency = 0.4
-Instance.new("UICorner", innerGlow).CornerRadius = UDim.new(1, 0)
-
--- // ГЛАВНОЕ МЕНЮ (Live Glass)
+-- // ГЛАВНОЕ МЕНЮ (Ultra Blur Glass)
 local main = Instance.new("CanvasGroup", sg)
-main.Size = UDim2.new(0, 280, 0, 220)
-main.Position = UDim2.new(0.5, -140, 0.5, -110)
-main.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-main.BackgroundTransparency = 0.2
+main.Size = UDim2.new(0, 270, 0, 210)
+main.Position = UDim2.new(0.5, -135, 0.5, -105)
+main.BackgroundColor3 = STYLE.GlassColor
+main.BackgroundTransparency = 0.45 -- Сильная прозрачность для эффекта размытия
 main.Visible = false
-main.ClipsDescendants = true
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 30)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 32)
 local mainStroke = Instance.new("UIStroke", main)
-mainStroke.Thickness = 2.5
+mainStroke.Thickness = 2
+mainStroke.Color = STYLE.Stroke
+mainStroke.Transparency = 0.2
 makeDraggable(main)
 
--- Живой бэкграунд (Плавающие блики)
-for i = 1, 2 do
+-- Мягкие блики внутри (создают объем)
+for i = 1, 3 do
     local blob = Instance.new("Frame", main)
-    blob.Size = UDim2.new(0, 150, 0, 150)
-    blob.BackgroundColor3 = Color3.fromHSV(math.random(), 0.5, 1)
-    blob.BackgroundTransparency = 0.8
+    blob.Size = UDim2.new(0, 180, 0, 180)
+    blob.Position = UDim2.new(math.random()-0.5, 0, math.random()-0.5, 0)
+    blob.BackgroundColor3 = Color3.new(1, 1, 1)
+    blob.BackgroundTransparency = 0.85
     Instance.new("UICorner", blob).CornerRadius = UDim.new(1, 0)
     task.spawn(function()
         while true do
-            local targetPos = UDim2.new(math.random()-0.5, 0, math.random()-0.5, 0)
-            TweenService:Create(blob, TweenInfo.new(4, Enum.EasingStyle.Sine), {Position = targetPos, BackgroundColor3 = Color3.fromHSV(math.random(), 0.5, 1)}):Play()
-            task.wait(4)
+            local target = UDim2.new(math.random()-0.5, 0, math.random()-0.5, 0)
+            TweenService:Create(blob, TweenInfo.new(5, Enum.EasingStyle.Sine), {Position = target}):Play()
+            task.wait(5)
         end
     end)
 end
 
 -- Контент
 local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1, 0, 0, 60)
+title.Size = UDim2.new(1, 0, 0, 65)
 title.Text = "sKillAura"
-title.TextColor3 = Color3.new(1,1,1)
+title.TextColor3 = STYLE.MainText
 title.Font = Enum.Font.GothamBold
-title.TextSize = 24
+title.TextSize = 22
 title.BackgroundTransparency = 1
-Instance.new("UIStroke", title).Thickness = 1
 
 local toggle = Instance.new("TextButton", main)
-toggle.Size = UDim2.new(0.8, 0, 0, 55)
-toggle.Position = UDim2.new(0.1, 0, 0, 70)
-toggle.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-toggle.Text = "SYSTEM: STANDBY"
-toggle.TextColor3 = Color3.new(1,1,1)
+toggle.Size = UDim2.new(0.85, 0, 0, 50)
+toggle.Position = UDim2.new(0.075, 0, 0, 75)
+toggle.BackgroundColor3 = STYLE.AccentOff
+toggle.Text = "DISABLED"
+toggle.TextColor3 = Color3.new(1, 1, 1)
 toggle.Font = Enum.Font.GothamMedium
-toggle.TextSize = 14
-Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 15)
+toggle.AutoButtonColor = false
+Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 14)
 
 local box = Instance.new("TextBox", main)
-box.Size = UDim2.new(0.8, 0, 0, 55)
-box.Position = UDim2.new(0.1, 0, 0, 135)
-box.BackgroundColor3 = Color3.new(1,1,1)
-box.BackgroundTransparency = 0.95
+box.Size = UDim2.new(0.85, 0, 0, 50)
+box.Position = UDim2.new(0.075, 0, 0, 135)
+box.BackgroundColor3 = Color3.new(0, 0, 0)
+box.BackgroundTransparency = 0.93
 box.Text = "Distance: 5"
-box.TextColor3 = Color3.new(1,1,1)
+box.TextColor3 = STYLE.MainText
 box.Font = Enum.Font.Gotham
-Instance.new("UICorner", box).CornerRadius = UDim.new(0, 15)
+Instance.new("UICorner", box).CornerRadius = UDim.new(0, 14)
 
--- // АНИМАЦИИ ОТКРЫТИЯ
+-- // ЛОГИКА
+local active = false
+local range = 5
+
 openBtn.MouseButton1Click:Connect(function()
     main.Visible = not main.Visible
     if main.Visible then
         main.GroupTransparency = 1
-        main.Size = UDim2.new(0, 200, 0, 150)
-        TweenService:Create(main, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Size = UDim2.new(0, 280, 0, 220), GroupTransparency = 0}):Play()
+        TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {GroupTransparency = 0}):Play()
     end
 end)
 
--- // ФУНКЦИОНАЛ
 toggle.MouseButton1Click:Connect(function()
     active = not active
-    local color = active and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(255, 50, 50)
-    TweenService:Create(toggle, TweenInfo.new(0.3), {BackgroundColor3 = color}):Play()
-    toggle.Text = active and "SYSTEM: ACTIVE" or "SYSTEM: STANDBY"
-    notify(active and "Aura Activated" or "Aura Deactivated", color)
+    local targetColor = active and STYLE.AccentOn or STYLE.AccentOff
+    TweenService:Create(toggle, TweenInfo.new(0.3), {BackgroundColor3 = targetColor}):Play()
+    toggle.Text = active and "ACTIVE" or "DISABLED"
 end)
 
 box.FocusLost:Connect(function()
     range = tonumber(box.Text:match("%d+")) or 5
     box.Text = "Distance: " .. range
-    notify("Range: " .. range .. " studs", Color3.new(1,1,1))
 end)
 
--- // ГЛАВНЫЙ ЦИКЛ (RGB + KILL)
-local visualSphere = nil
-local highlights = {}
-
-RunService.Heartbeat:Connect(function(dt)
-    globalHue = (globalHue + dt * 0.3) % 1
-    local color = Color3.fromHSV(globalHue, 0.7, 1)
-    
-    -- Реактивный интерфейс
-    mainStroke.Color = color
-    obStroke.Color = color
-    title.TextColor3 = color
-    
+-- Основной цикл (Убийство)
+RunService.Heartbeat:Connect(function()
     if not active then return end
-
+    
     local char = player.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     local tool = char and char:FindFirstChildOfClass("Tool")
     local handle = tool and (tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("Part"))
 
     if hrp and handle then
-        if not visualSphere then
-            visualSphere = Instance.new("Part", workspace)
-            visualSphere.Shape = "Ball"
-            visualSphere.Material = "ForceField"
-            visualSphere.CanCollide = false
-            visualSphere.Anchored = true
-        end
-        visualSphere.Size = Vector3.new(range*2, range*2, range*2)
-        visualSphere.Color = color
-        visualSphere.CFrame = handle.CFrame
-
-        local targets = {}
         for _, v in ipairs(Players:GetPlayers()) do
             if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local tHrp = v.Character.HumanoidRootPart
                 if (hrp.Position - tHrp.Position).Magnitude <= range then
-                    targets[v.Name] = v.Character
-                    
-                    -- Хит-эффект на GUI
-                    TweenService:Create(main, TweenInfo.new(0.1), {GroupTransparency = 0.3}):Play()
-                    task.delay(0.1, function() TweenService:Create(main, TweenInfo.new(0.1), {GroupTransparency = 0}):Play() end)
-
                     tool:Activate()
                     for _, p in ipairs(v.Character:GetChildren()) do
                         if p:IsA("BasePart") then
