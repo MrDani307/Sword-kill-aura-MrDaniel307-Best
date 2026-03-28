@@ -5,44 +5,43 @@ local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 
--- Чистка
-if CoreGui:FindFirstChild("iOS_Aura") then CoreGui.iOS_Aura:Destroy() end
+-- Очистка
+if CoreGui:FindFirstChild("sKillAura_iOS_Final") then CoreGui.sKillAura_iOS_Final:Destroy() end
 
 local sg = Instance.new("ScreenGui", CoreGui)
-sg.Name = "iOS_Aura"
+sg.Name = "sKillAura_iOS_Final"
 sg.ResetOnSpawn = false
 
--- // 1. КНОПКА ОТКРЫТИЯ (В стиле iOS AssistiveTouch)
+-- // КНОПКА ОТКРЫТИЯ (AssistiveTouch Style)
 local openBtn = Instance.new("TextButton", sg)
 openBtn.Size = UDim2.new(0, 56, 0, 56)
 openBtn.Position = UDim2.new(0, 15, 0.5, -28)
-openBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-openBtn.BackgroundTransparency = 0.4 -- Эффект стекла
-openBtn.Text = "" -- Никаких багованных символов
+openBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+openBtn.BackgroundTransparency = 0.4
+openBtn.Text = ""
 openBtn.Draggable = true
 openBtn.Active = true
 
 Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 16)
-local btnStroke = Instance.new("UIStroke", openBtn)
-btnStroke.Color = Color3.fromRGB(255, 255, 255)
-btnStroke.Thickness = 1.5
-btnStroke.Transparency = 0.85
+local bStroke = Instance.new("UIStroke", openBtn)
+bStroke.Color = Color3.fromRGB(255, 255, 255)
+bStroke.Thickness = 1.5
+bStroke.Transparency = 0.8
 
--- Внутренний кружок AssistiveTouch
-local innerCircle = Instance.new("Frame", openBtn)
-innerCircle.Size = UDim2.new(0, 32, 0, 32)
-innerCircle.Position = UDim2.new(0.5, -16, 0.5, -16)
-innerCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-innerCircle.BackgroundTransparency = 0.5
-innerCircle.Interactable = false
-Instance.new("UICorner", innerCircle).CornerRadius = UDim.new(1, 0)
+local inner = Instance.new("Frame", openBtn)
+inner.Size = UDim2.new(0, 30, 0, 30)
+inner.Position = UDim2.new(0.5, -15, 0.5, -15)
+inner.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+inner.BackgroundTransparency = 0.5
+inner.Active = false
+Instance.new("UICorner", inner).CornerRadius = UDim.new(1, 0)
 
--- // 2. ГЛАВНОЕ МЕНЮ (iOS Glassmorphism)
+-- // ГЛАВНОЕ МЕНЮ (Glassmorphism)
 local main = Instance.new("Frame", sg)
 main.Size = UDim2.new(0, 0, 0, 0)
 main.Position = UDim2.new(0.5, 0, 0.5, 0)
-main.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
-main.BackgroundTransparency = 0.35
+main.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+main.BackgroundTransparency = 0.3
 main.ClipsDescendants = true
 main.Visible = false
 main.Active = true
@@ -52,9 +51,9 @@ local mCorner = Instance.new("UICorner", main)
 mCorner.CornerRadius = UDim.new(0, 24)
 
 local mStroke = Instance.new("UIStroke", main)
-mStroke.Thickness = 1.5
+mStroke.Thickness = 1.2
 mStroke.Color = Color3.fromRGB(255, 255, 255)
-mStroke.Transparency = 0.85
+mStroke.Transparency = 0.8
 
 local content = Instance.new("Frame", main)
 content.Size = UDim2.new(1, 0, 1, 0)
@@ -64,146 +63,134 @@ local title = Instance.new("TextLabel", content)
 title.Size = UDim2.new(1, 0, 0, 50)
 title.BackgroundTransparency = 1
 title.Text = "sKillAura"
-title.TextColor3 = Color3.fromRGB(250, 250, 250)
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.GothamMedium
 title.TextSize = 18
 
--- Кнопка Toggle
 local toggle = Instance.new("TextButton", content)
 toggle.Size = UDim2.new(0.85, 0, 0, 45)
 toggle.Position = UDim2.new(0.075, 0, 0, 55)
-toggle.BackgroundColor3 = Color3.fromRGB(255, 59, 48) -- Apple Red
+toggle.BackgroundColor3 = Color3.fromRGB(255, 59, 48) -- iOS Red
 toggle.Text = "Aura: Off"
-toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggle.TextColor3 = Color3.new(1, 1, 1)
 toggle.Font = Enum.Font.GothamMedium
 toggle.TextSize = 15
 Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 14)
 
--- Ввод радиуса
 local box = Instance.new("TextBox", content)
 box.Size = UDim2.new(0.85, 0, 0, 45)
 box.Position = UDim2.new(0.075, 0, 0, 110)
-box.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+box.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 box.BackgroundTransparency = 0.5
 box.Text = "5"
-box.PlaceholderText = "Radius"
-box.TextColor3 = Color3.fromRGB(255, 255, 255)
+box.TextColor3 = Color3.new(1, 1, 1)
 box.Font = Enum.Font.Gotham
-box.TextSize = 15
 Instance.new("UICorner", box).CornerRadius = UDim.new(0, 14)
 
--- // 3. "ЖИДКАЯ" АНИМАЦИЯ ОТКРЫТИЯ (Spring Physics)
+-- // АНИМАЦИИ
 local isOpen = false
-local tweenIn = TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-local tweenOut = TweenInfo.new(0.25, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-
 openBtn.MouseButton1Click:Connect(function()
-    isOpen = not isOpen
-    if isOpen then
-        main.Visible = true
-        main.Size = UDim2.new(0, 50, 0, 50)
-        main.Position = UDim2.new(0.5, -25, 0.5, -25)
-        
-        TweenService:Create(main, tweenIn, {
-            Size = UDim2.new(0, 220, 0, 180),
-            Position = UDim2.new(0.5, -110, 0.5, -90)
-        }):Play()
-    else
-        local shrink = TweenService:Create(main, tweenOut, {
-            Size = UDim2.new(0, 0, 0, 0),
-            Position = UDim2.new(0.5, 0, 0.5, 0)
-        })
-        shrink:Play()
-        shrink.Completed:Connect(function() if not isOpen then main.Visible = false end end)
-    end
+	isOpen = not isOpen
+	if isOpen then
+		main.Visible = true
+		main:TweenSizeAndPosition(UDim2.new(0, 220, 0, 180), UDim2.new(0.5, -110, 0.5, -90), "Out", "Back", 0.4, true)
+	else
+		main:TweenSizeAndPosition(UDim2.new(0, 0, 0, 0), UDim2.new(0.5, 0, 0.5, 0), "In", "Sine", 0.2, true, function()
+			if not isOpen then main.Visible = false end
+		end)
+	end
 end)
 
--- // ПЕРЕМЕННЫЕ ЛОГИКИ
+-- // ЛОГИКА
 local active = false
 local range = 5
 local visualSphere = nil
 local highlights = {}
 
 toggle.MouseButton1Click:Connect(function()
-    active = not active
-    local targetColor = active and Color3.fromRGB(52, 199, 89) or Color3.fromRGB(255, 59, 48) -- Apple Green / Red
-    TweenService:Create(toggle, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
-    
-    toggle.Text = active and "Aura: Active" or "Aura: Off"
+	active = not active
+	local targetCol = active and Color3.fromRGB(52, 199, 89) or Color3.fromRGB(255, 59, 48)
+	TweenService:Create(toggle, TweenInfo.new(0.25), {BackgroundColor3 = targetCol}):Play()
+	toggle.Text = active and "Aura: Active" or "Aura: Off"
 
-    if not active then
-        if visualSphere then visualSphere:Destroy() visualSphere = nil end
-        for _, h in pairs(highlights) do h:Destroy() end
-        highlights = {}
-    end
+	if not active then
+		if visualSphere then visualSphere:Destroy() visualSphere = nil end
+		for _, h in pairs(highlights) do h:Destroy() end
+		highlights = {}
+	end
 end)
 
 box.FocusLost:Connect(function()
-    range = tonumber(box.Text) or 5
-    box.Text = tostring(range)
+	range = tonumber(box.Text) or 5
+	box.Text = tostring(range)
 end)
 
--- // ГЛАВНЫЙ ЦИКЛ (ИСПРАВЛЕНА РЕГИСТРАЦИЯ УРОНА)
+-- // ТОТ САМЫЙ ЦИКЛ РЕГИСТРАЦИИ (1 в 1)
 local hue = 0
 RunService.Heartbeat:Connect(function(dt)
-    if not active then return end
-    
-    hue = (hue + dt * 0.4) % 1
-    local rainbow = Color3.fromHSV(hue, 0.8, 1)
-    
-    local char = player.Character
-    local tool = char and char:FindFirstChildOfClass("Tool")
-    local handle = tool and (tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("Part") or tool:FindFirstChildOfClass("MeshPart"))
-    
-    if char and char:FindFirstChild("HumanoidRootPart") and handle then
-        if not visualSphere then
-            visualSphere = Instance.new("Part", workspace)
-            visualSphere.Shape = "Ball"
-            visualSphere.Material = "ForceField"
-            visualSphere.CastShadow = false
-            visualSphere.CanCollide = false
-            visualSphere.CanTouch = false
-            visualSphere.Anchored = true
-            visualSphere.Transparency = 0.5
-        end
-        visualSphere.Size = Vector3.new(range*2, range*2, range*2)
-        visualSphere.Color = rainbow
-        visualSphere.CFrame = handle.CFrame
-        
-        local currentTargets = {}
-        for _, v in ipairs(Players:GetPlayers()) do
-            if v ~= player and v.Character and (v.Team ~= player.Team or v.Team == nil) then
-                local tHrp = v.Character:FindFirstChild("HumanoidRootPart")
-                local tHum = v.Character:FindFirstChild("Humanoid")
-                
-                if tHrp and tHum and tHum.Health > 0 then
-                    -- Дистанция считается от меча (handle), так как сфера на нем
-                    local dist = (handle.Position - tHrp.Position).Magnitude
-                    if dist <= range then
-                        currentTargets[v.Name] = v.Character
-                        
-                        if not highlights[v.Name] then
-                            local h = Instance.new("Highlight", v.Character)
-                            h.FillTransparency = 0.5
-                            highlights[v.Name] = h
-                        end
-                        highlights[v.Name].FillColor = rainbow
-                        highlights[v.Name].OutlineColor = rainbow
-                        
-                        -- Бьем ровно 1 раз за кадр (без перегрузки сервера)
-                        tool:Activate()
-                        firetouchinterest(handle, tHrp, 0)
-                        firetouchinterest(handle, tHrp, 1)
-                    end
-                end
-            end
-        end
-        for name, h in pairs(highlights) do
-            if not currentTargets[name] then h:Destroy() highlights[name] = nil end
-        end
-    else
-        if visualSphere then visualSphere:Destroy() visualSphere = nil end
-        for _, h in pairs(highlights) do h:Destroy() end
-        highlights = {}
-    end
+	if not active then return end
+	hue = (hue + dt * 0.4) % 1
+	local color = Color3.fromHSV(hue, 0.8, 1)
+
+	local char = player.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	local tool = char and char:FindFirstChildOfClass("Tool")
+	local handle = tool and (tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("Part") or tool:FindFirstChildOfClass("MeshPart"))
+
+	if hrp and handle then
+		-- Сфера
+		if not visualSphere then
+			visualSphere = Instance.new("Part", workspace)
+			visualSphere.Shape = "Ball"
+			visualSphere.Material = "ForceField"
+			visualSphere.CastShadow = false
+			visualSphere.CanCollide = false
+			visualSphere.CanTouch = false
+			visualSphere.Anchored = true
+			visualSphere.Transparency = 0.5
+		end
+		visualSphere.Size = Vector3.new(range*2, range*2, range*2)
+		visualSphere.Color = color
+		visualSphere.CFrame = handle.CFrame
+
+		local currentTargets = {}
+		for _, v in ipairs(Players:GetPlayers()) do
+			if v ~= player and v.Character and (v.Team ~= player.Team or v.Team == nil) then
+				local tChar = v.Character
+				local tHrp = tChar:FindFirstChild("HumanoidRootPart")
+				local tHum = tChar:FindFirstChild("Humanoid")
+
+				if tHrp and tHum and tHum.Health > 0 then
+					local dist = (hrp.Position - tHrp.Position).Magnitude
+					if dist <= range then
+						currentTargets[v.Name] = tChar
+						
+						-- Highlight
+						if not highlights[v.Name] then
+							local h = Instance.new("Highlight", tChar)
+							h.FillTransparency = 0.5
+							highlights[v.Name] = h
+						end
+						highlights[v.Name].FillColor = color
+						highlights[v.Name].OutlineColor = color
+
+						-- РЕГИСТРАЦИЯ УРОНА (КАК В ОРИГИНАЛЕ)
+						tool:Activate()
+						for _, part in ipairs(tChar:GetChildren()) do
+							if part:IsA("BasePart") then
+								firetouchinterest(handle, part, 0)
+								firetouchinterest(handle, part, 1)
+							end
+						end
+					end
+				end
+			end
+		end
+
+		for name, h in pairs(highlights) do
+			if not currentTargets[name] then h:Destroy() highlights[name] = nil end
+		end
+	else
+		if visualSphere then visualSphere:Destroy() visualSphere = nil end
+	end
 end)
