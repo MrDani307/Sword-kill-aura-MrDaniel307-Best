@@ -20,7 +20,6 @@ local THEME = {
 	Text = Color3.fromRGB(255, 255, 255)
 }
 
--- // КНОПКА ОТКРЫТИЯ
 local openBtn = Instance.new("TextButton", sg)
 openBtn.Size = UDim2.new(0, 60, 0, 60)
 openBtn.Position = UDim2.new(0, 20, 0.5, -30)
@@ -43,7 +42,6 @@ innerIcon.BackgroundColor3 = THEME.Text
 innerIcon.BackgroundTransparency = 0.2
 Instance.new("UICorner", innerIcon).CornerRadius = UDim.new(1, 0)
 
--- // ГЛАВНОЕ МЕНЮ (HYPER GLASS)
 local main = Instance.new("CanvasGroup", sg)
 main.Size = UDim2.new(0, 260, 0, 0)
 main.Position = UDim2.new(0.5, -130, 0.5, 0)
@@ -59,7 +57,6 @@ mStroke.Thickness = 1.5
 mStroke.Color = THEME.Text
 mStroke.Transparency = 0.7
 
--- ЭФФЕКТ БЛЕСКА (SHINE)
 local shineFrame = Instance.new("Frame", main)
 shineFrame.Size = UDim2.new(2, 0, 2, 0)
 shineFrame.Position = UDim2.new(-1.5, 0, -0.5, 0)
@@ -75,7 +72,7 @@ shineGradient.Color = ColorSequence.new({
 })
 shineGradient.Transparency = NumberSequence.new({
 	NumberSequenceKeypoint.new(0, 1),
-	NumberSequenceKeypoint.new(0.5, 0.6), -- Центр блика
+	NumberSequenceKeypoint.new(0.5, 0.6),
 	NumberSequenceKeypoint.new(1, 1)
 })
 
@@ -85,11 +82,10 @@ task.spawn(function()
 		local tween = TweenService:Create(shineFrame, TweenInfo.new(2.5, Enum.EasingStyle.Linear), {Position = UDim2.new(1.5, 0, -0.5, 0)})
 		tween:Play()
 		tween.Completed:Wait()
-		task.wait(1.5) -- Пауза между бликами
+		task.wait(1.5)
 	end
 end)
 
--- КОНТЕНТ
 local content = Instance.new("Frame", main)
 content.Size = UDim2.new(1, -40, 1, -40)
 content.Position = UDim2.new(0, 20, 0, 20)
@@ -99,7 +95,6 @@ local layout = Instance.new("UIListLayout", content)
 layout.Padding = UDim.new(0, 15)
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
--- Заголовок sKillAura
 local title = Instance.new("TextLabel", content)
 title.Size = UDim2.new(1, 0, 0, 30)
 title.BackgroundTransparency = 1
@@ -112,7 +107,6 @@ local titleStroke = Instance.new("UIStroke", title)
 titleStroke.Thickness = 1
 titleStroke.Transparency = 0.5
 
--- Кнопка
 local toggle = Instance.new("TextButton", content)
 toggle.Size = UDim2.new(1, 0, 0, 50)
 toggle.BackgroundColor3 = THEME.Off
@@ -129,7 +123,6 @@ btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 btnStroke.Color = THEME.Text
 btnStroke.Transparency = 0.8
 
--- Ввод дистанции
 local box = Instance.new("TextBox", content)
 box.Size = UDim2.new(1, 0, 0, 50)
 box.BackgroundColor3 = Color3.new(1,1,1)
@@ -143,7 +136,6 @@ Instance.new("UICorner", box).CornerRadius = UDim.new(0, 12)
 Instance.new("UIStroke", box).Color = THEME.Text
 Instance.new("UIStroke", box).Transparency = 0.9
 
--- // ЛОГИКА АНИМАЦИИ
 local isOpen = false
 openBtn.MouseButton1Click:Connect(function()
 	isOpen = not isOpen
@@ -165,7 +157,6 @@ openBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- // ФУНКЦИОНАЛ
 local active = false
 local range = 5
 local visualSphere = nil
@@ -190,7 +181,6 @@ box.FocusLost:Connect(function()
 	box.Text = "Range: " .. tostring(range)
 end)
 
--- Основной цикл
 local hue = 0
 RunService.Heartbeat:Connect(function(dt)
 	if not active then return end
