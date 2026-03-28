@@ -7,10 +7,10 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
 -- Очистка старого интерфейса
-if CoreGui:FindFirstChild("sKillAura_Lux") then CoreGui.sKillAura_Lux:Destroy() end
+if CoreGui:FindFirstChild("sKillAura_Ultima_Lux") then CoreGui.sKillAura_Ultima_Lux:Destroy() end
 
 local sg = Instance.new("ScreenGui", CoreGui)
-sg.Name = "sKillAura_Lux"
+sg.Name = "sKillAura_Ultima_Lux"
 sg.IgnoreGuiInset = true
 sg.ResetOnSpawn = false
 
@@ -22,7 +22,7 @@ local THEME = {
 	OnColor = Color3.fromRGB(50, 215, 75),  -- System Green
 	MainText = Color3.fromRGB(240, 240, 245),
 	SecText = Color3.fromRGB(150, 150, 160),
-	AccentGlow = 0.5, -- Прозрачность обводки
+	CornerRad = UDim.new(0, 28),
 }
 
 -- Уникальные Asset IDs (более премиум)
@@ -111,7 +111,7 @@ main.ClipsDescendants = true
 main.GroupTransparency = 1 -- Для плавного появления
 main.ZIndex = 5
 
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 28)
+Instance.new("UICorner", main).CornerRadius = THEME.CornerRad
 
 -- Акцентный пульсирующий контур меню
 local mainStroke = Instance.new("UIStroke", main)
@@ -139,20 +139,20 @@ header.LayoutOrder = 1
 local title = Instance.new("TextLabel", header)
 title.Size = UDim2.new(1, 0, 1, 0)
 title.BackgroundTransparency = 1
-title.Text = "SKILL AURA"
+title.Text = "sKillAura" -- ТО САМОЕ НАЗВАНИЕ
 title.TextColor3 = THEME.MainText
 title.Font = Enum.Font.GothamBold
-title.TextSize = 20 -- Чуть больше
+title.TextSize = 22 -- Чуть больше для акцента
 title.TextXAlignment = Enum.TextXAlignment.Left
 
 local ver = Instance.new("TextLabel", header)
 ver.Size = UDim2.new(0, 50, 1, 0)
 ver.Position = UDim2.new(1, -50, 0, 0)
 ver.BackgroundTransparency = 1
-ver.Text = "LUX"
+ver.Text = "LUXURY"
 ver.TextColor3 = THEME.OffColor
 ver.Font = Enum.Font.GothamMedium
-ver.TextSize = 11
+ver.TextSize = 10
 ver.TextXAlignment = Enum.TextXAlignment.Right
 
 -- // 3. КОМПОНЕНТЫ УПРАВЛЕНИЯ ЛЮКС
@@ -299,7 +299,7 @@ toggleBtn.MouseButton1Click:Connect(function()
 	
 	-- Синхронизация рамки меню с цветом Ауры
 	TweenService:Create(mainStroke, TweenInfo.new(0.4), {Color = targetCol}):Play()
-	ver.Text = active and "READY" or "LUX"
+	ver.Text = active and "READY" or "LUXURY"
 	ver.TextColor3 = targetCol
 	togText.Text = targetText
 
