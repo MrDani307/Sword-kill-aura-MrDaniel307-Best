@@ -162,6 +162,40 @@ local range = 5
 local visualSphere = nil
 local highlights = {}
 
+-- Переменные для автоэкипировки меча
+local swordEquipped = false
+local swordName = "Sword" -- название меча в инвентаре (если нужно изменить, поменяй здесь)
+
+-- Функция экипировки меча (перенос из Backpack в Character)
+local function equipSword()
+    local backpack = player:FindFirstChild("Backpack")
+    if not backpack then return false end
+    local sword = backpack:FindFirstChild(swordName)
+    if sword and sword:IsA("Tool") then
+        local char = player.Character
+        if char then
+            sword.Parent = char
+            return true
+        end
+    end
+    return false
+end
+
+-- Функция деэкипировки меча (перенос из Character обратно в Backpack)
+local function unequipSword()
+    local char = player.Character
+    if not char then return false end
+    local sword = char:FindFirstChild(swordName)
+    if sword and sword:IsA("Tool") then
+        local backpack = player:FindFirstChild("Backpack")
+        if backpack then
+            sword.Parent = backpack
+            return true
+        end
+    end
+    return false
+end
+
 toggle.MouseButton1Click:Connect(function()
 	active = not active
 	local targetCol = active and THEME.On or THEME.Off
@@ -172,6 +206,11 @@ toggle.MouseButton1Click:Connect(function()
 		if visualSphere then visualSphere:Destroy() visualSphere = nil end
 		for _, h in pairs(highlights) do h:Destroy() end
 		highlights = {}
+		-- Если killaura выключена, возвращаем меч в инвентарь
+		if swordEquipped then
+			unequipSword()
+			swordEquipped = false
+		end
 	end
 end)
 
@@ -237,10 +276,26 @@ RunService.Heartbeat:Connect(function(dt)
 			end
 		end
 
+		-- ===== ДОБАВЛЕННЫЙ БЛОК: автоэкипировка меча =====
+		-- Проверяем, есть ли враги в радиусе (currentTargets не пуста)
+		local enemiesExist = next(currentTargets) ~= nil
+		if enemiesExist and not swordEquipped then
+			-- Если враги есть и меч ещё не экипирован — экипируем
+			local success = equipSword()
+			if success then swordEquipped = true end
+		elseif not enemiesExist and swordEquipped then
+			-- Если врагов нет и меч экипирован — убираем в рюкзак
+			unequipSword()
+			swordEquipped = false
+		end
+		-- ================================================
+
 		for name, h in pairs(highlights) do
 			if not currentTargets[name] then h:Destroy() highlights[name] = nil end
 		end
 	else
 		if visualSphere then visualSphere:Destroy() visualSphere = nil end
+		-- Если персонаж исчез (например, умер), сбрасываем флаг экипировки
+		swordEquipped = false
 	end
 end)
